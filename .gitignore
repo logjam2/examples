@@ -1,0 +1,14 @@
+# Visual Studio files
+*.user
+*.suo
+*.Cache
+/_ReSharper.*
+/TestResults
+
+# Build output
+obj
+bin
+
+# NuGet packages
+/packages
+*.nupkg
