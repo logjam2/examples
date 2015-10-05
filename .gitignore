@@ -4,6 +4,7 @@
 *.Cache
 /_ReSharper.*
 /TestResults
+.vs
 
 # Build output
 obj
