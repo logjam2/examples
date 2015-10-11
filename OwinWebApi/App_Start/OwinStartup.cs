@@ -7,11 +7,15 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
+using System.Diagnostics.Contracts;
+using System.IO;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.ExceptionHandling;
 using System.Web.Http.Tracing;
+using LogJam.Config;
 using LogJam.Trace;
+using LogJam.Trace.Format;
 using LogJam.WebApi;
 using Microsoft.Owin;
 using Owin;
@@ -47,6 +51,13 @@ namespace LogJam.Examples.OwinWebApi
 		private void ConfigureWebAppLogging(IAppBuilder owinAppBuilder)
 		{
 			// Configure LogWriters
+			if (ShouldLogToConsole(owinAppBuilder))
+			{
+				owinAppBuilder.GetLogManagerConfig().UseConsole();
+			}
+#if DEBUG
+			owinAppBuilder.GetLogManagerConfig().UseDebugger();
+#endif
 
 			// Use LogJam for OWIN tracing, and HTTP request logging
 			owinAppBuilder.UseOwinTracerLogging();
@@ -56,10 +67,23 @@ namespace LogJam.Examples.OwinWebApi
 			owinAppBuilder.TraceExceptions(logFirstChance: false, logUnhandled: true);
 		}
 
+		/// <summary>
+		/// Returns <c>true</c> if logging to the console (aka stdout) should be enabled.
+		/// </summary>
+		/// <param name="owinAppBuilder"></param>
+		/// <returns></returns>
+		protected bool ShouldLogToConsole(IAppBuilder owinAppBuilder)
+		{
+			// This is a test we use to determine whether it's valid to write to the console - eg it's valid in OwinHost, but not in IIS
+			object value;
+			return owinAppBuilder.Properties.TryGetValue("host.TraceOutput", out value)
+			       && (value is TextWriter);
+		}
+
 		private void ConfigureWebApiTracing(ITracerFactory tracerFactory, HttpConfiguration webApiConfig)
 		{
 			webApiConfig.Services.Replace(typeof(ITraceWriter), new LogJamWebApiTraceWriter(tracerFactory));
-			//webApiConfig.Services.Add(typeof(IExceptionLogger), new LogJamExceptionLogger(tracerFactory));
+			webApiConfig.Services.Add(typeof(IExceptionLogger), new LogJamExceptionLogger(tracerFactory));
 		}
 
 	}

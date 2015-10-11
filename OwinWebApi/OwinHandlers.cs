@@ -27,10 +27,11 @@ namespace LogJam.Examples.OwinWebApi
 			_owinLogger = owinAppBuilder.CreateLogger<OwinHandlers>();
 
             owinAppBuilder.Map("/owin/trace", (appBuilder => appBuilder.Run(OwinTrace)));
+			owinAppBuilder.Map("/owin/exception", (appBuilder => appBuilder.Run(OwinException)));
 		}
 
 		/// <summary>
-		/// A sample OWIN handler, to test OWIN tracing
+		/// An OWIN handler, to test OWIN tracing
 		/// </summary>
 		/// <param name="owinContext"></param>
 		/// <returns></returns>
@@ -57,6 +58,15 @@ namespace LogJam.Examples.OwinWebApi
 			return owinContext.Response.WriteAsync(string.Format("Traced '{0}' {1} times to OWIN Tracer with severity: Information", message, traceCount));
 		}
 
+		/// <summary>
+		/// An OWIN handler, which throws an <see cref="Exception"/>.
+		/// </summary>
+		/// <param name="arg"></param>
+		/// <returns></returns>
+		private Task OwinException(IOwinContext arg)
+		{
+			throw new Exception("Exception thrown b/c ~/owin/exception URL was called.");
+		}
 
 	}
 }
