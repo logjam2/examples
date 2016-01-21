@@ -7,20 +7,20 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System;
-using System.Diagnostics.Contracts;
 using System.IO;
-using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.ExceptionHandling;
 using System.Web.Http.Tracing;
 using LogJam.Config;
+using LogJam.Examples.OwinWebApi;
 using LogJam.Trace;
+using LogJam.Trace.Config;
 using LogJam.Trace.Format;
 using LogJam.WebApi;
 using Microsoft.Owin;
 using Owin;
 
-[assembly: Microsoft.Owin.OwinStartup(typeof (LogJam.Examples.OwinWebApi.OwinStartup))]
+[assembly: OwinStartup(typeof (OwinStartup))]
 
 namespace LogJam.Examples.OwinWebApi
 {
@@ -51,17 +51,27 @@ namespace LogJam.Examples.OwinWebApi
 		private void ConfigureWebAppLogging(IAppBuilder owinAppBuilder)
 		{
 			// Configure LogWriters
-			if (ShouldLogToConsole(owinAppBuilder))
-			{
-				owinAppBuilder.GetLogManagerConfig().UseConsole();
-			}
-#if DEBUG
-			owinAppBuilder.GetLogManagerConfig().UseDebugger();
-#endif
+		    if (ShouldLogToConsole(owinAppBuilder))
+		    {
+                // TODO: Support UseConsoleIfAvailable()
+		        owinAppBuilder.GetLogManagerConfig().UseConsole();
+		        Console.WriteLine("Console logging configured");
+		    }
+		    else
+		    {
+                Console.WriteLine("Console logging NOT configured");
+            }
 
-			// Use LogJam for OWIN tracing, and HTTP request logging
-			owinAppBuilder.UseOwinTracerLogging();
-			owinAppBuilder.LogHttpRequests();
+            // Normally you don't need to do this - debug output is enabled if a debugger is attached during LogJam initialization.
+            // HOWEVER, in this case (using OwinHost.exe), the debugger isn't attached during initialization, so this is enabled explicitly.
+		    owinAppBuilder.GetLogManagerConfig().UseDebugger();
+
+            // Use LogJam for OWIN tracing, and HTTP request logging
+            // TODO: Support owinAppBuilder.GetTraceManager().TraceToAll(traceFormatter: new DefaultTraceFormatter() { IncludeTimestamp = true });
+		    owinAppBuilder.GetTraceManagerConfig().TraceTo(owinAppBuilder.GetLogManagerConfig().Writers, 
+                traceFormatter: new DefaultTraceFormatter() { IncludeTimestamp = true });
+            owinAppBuilder.UseOwinTracerLogging();
+		    owinAppBuilder.LogHttpRequestsToAll();
 
 			// Trace OWIN exceptions
 			owinAppBuilder.TraceExceptions(logFirstChance: false, logUnhandled: true);

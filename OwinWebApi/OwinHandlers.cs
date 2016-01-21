@@ -44,7 +44,7 @@ namespace LogJam.Examples.OwinWebApi
 			}
 
 			int traceCount;
-			string traceCountParam = owinContext.Request.Query.Get("traceCount");
+			string traceCountParam = owinContext.Request.Query.Get("count");
 			if (! int.TryParse(traceCountParam, out traceCount))
 			{
 				traceCount = 1;

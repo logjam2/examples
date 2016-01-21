@@ -16,7 +16,7 @@ namespace LogJam.Examples.OwinWebApi.Controllers
     {
         // GET: webapi/logjam-trace
 		[HttpGet, Route("logjam-trace")]
-        public string LogJamTrace(string message = null, TraceLevel severity = TraceLevel.Info, int traceCount = 1)
+        public string LogJamTrace(string message = null, TraceLevel severity = TraceLevel.Info, int count = 1)
         {
 			if (string.IsNullOrEmpty(message))
 			{
@@ -24,17 +24,17 @@ namespace LogJam.Examples.OwinWebApi.Controllers
 			}
 
             Tracer tracer = TraceManager.Instance.TracerFor(this);
-			for (int i = 0; i < traceCount; ++i)
+			for (int i = 0; i < count; ++i)
 			{
 				tracer.Trace(severity, message);
 			}
 
-			return string.Format("Traced '{0}' {1} times to LogJam Tracer with severity: {2}", message, traceCount, severity);
+			return string.Format("Traced '{0}' {1} times to LogJam Tracer with severity: {2}", message, count, severity);
         }
 
 		// GET: webapi/webapi-trace
 		[HttpGet, Route("webapi-trace")]
-		public string WebApiTrace(string message = null, WebApiTracing.TraceLevel webApiTraceLevel = WebApiTracing.TraceLevel.Info, int traceCount = 1)
+		public string WebApiTrace(string message = null, WebApiTracing.TraceLevel webApiTraceLevel = WebApiTracing.TraceLevel.Info, int count = 1)
 		{
 			if (string.IsNullOrEmpty(message))
 			{
@@ -42,12 +42,12 @@ namespace LogJam.Examples.OwinWebApi.Controllers
 			}
 
 			WebApiTracing.ITraceWriter webApiTraceWriter = Configuration.Services.GetTraceWriter();
-			for (int i = 0; i < traceCount; ++i)
+			for (int i = 0; i < count; ++i)
 			{
 				webApiTraceWriter.Trace(Request, "TestApiController", webApiTraceLevel, record => record.Message = message);
 			}
 
-			return string.Format("Traced '{0}' {1} times to Web-Api ITraceWriter with severity: {2}", message, traceCount, webApiTraceLevel);
+			return string.Format("Traced '{0}' {1} times to Web-Api ITraceWriter with severity: {2}", message, count, webApiTraceLevel);
 		}
 
 		// GET: webapi/exception
