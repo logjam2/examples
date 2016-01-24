@@ -18,83 +18,95 @@ using LogJam.Trace.Config;
 using LogJam.Trace.Format;
 using LogJam.WebApi;
 using Microsoft.Owin;
+using Microsoft.Owin.FileSystems;
+using Microsoft.Owin.StaticFiles;
 using Owin;
 
 [assembly: OwinStartup(typeof (OwinStartup))]
 
 namespace LogJam.Examples.OwinWebApi
 {
-	public class OwinStartup
-	{
-		public void Configuration(IAppBuilder owinAppBuilder)
-		{
-			// OWIN logging should be configured first, so everything gets logged
-			ConfigureWebAppLogging(owinAppBuilder);
+    public class OwinStartup
+    {
 
-			// OWIN error page should be next in the pipeline
-			owinAppBuilder.UseErrorPage();
+        public void Configuration(IAppBuilder owinAppBuilder)
+        {
+            // OWIN logging should be configured first, so everything gets logged
+            ConfigureWebAppLogging(owinAppBuilder);
 
-			// Some OWIN Handlers for testing
-			new OwinHandlers().Configure(owinAppBuilder);
+            // OWIN error page should be next in the pipeline
+            // REVIEW: This middleware can be disabled to see how the LogJam.Owin.ExceptionLoggingMiddleware does for OWIN exceptions
+            owinAppBuilder.UseErrorPage();
 
-			// Web API
-			var webApiConfig = new HttpConfiguration();
-			ConfigureWebApiTracing(owinAppBuilder.GetTracerFactory(), webApiConfig);
-			WebApiConfig.Register(webApiConfig);
-			owinAppBuilder.UseWebApi(webApiConfig);
-		}
+            // Some OWIN Handlers for testing
+            new OwinHandlers().Configure(owinAppBuilder);
 
-		/// <summary>
-		/// Main LogJam initialization, and configure LogJam for OWIN tracing, and HTTP request logging
-		/// </summary>
-		/// <param name="owinAppBuilder"></param>
-		private void ConfigureWebAppLogging(IAppBuilder owinAppBuilder)
-		{
-			// Configure LogWriters
-		    if (ShouldLogToConsole(owinAppBuilder))
-		    {
+            // Web API
+            var webApiConfig = new HttpConfiguration();
+            ConfigureWebApiTracing(owinAppBuilder.GetTracerFactory(), webApiConfig);
+            WebApiConfig.Register(webApiConfig);
+            owinAppBuilder.UseWebApi(webApiConfig);
+
+            // Static files
+            owinAppBuilder.UseFileServer(new FileServerOptions()
+                                         {
+                                             RequestPath = new PathString(""),
+                                             FileSystem = new PhysicalFileSystem(".")
+                                         });
+        }
+
+        /// <summary>
+        /// Main LogJam initialization, and configure LogJam for OWIN tracing, and HTTP request logging
+        /// </summary>
+        /// <param name="owinAppBuilder"></param>
+        private void ConfigureWebAppLogging(IAppBuilder owinAppBuilder)
+        {
+            // Configure LogWriters
+            if (ShouldLogToConsole(owinAppBuilder))
+            {
                 // TODO: Support UseConsoleIfAvailable()
-		        owinAppBuilder.GetLogManagerConfig().UseConsole();
-		        Console.WriteLine("Console logging configured");
-		    }
-		    else
-		    {
+                owinAppBuilder.GetLogManagerConfig().UseConsole();
+                Console.WriteLine("Console logging configured");
+            }
+            else
+            {
                 Console.WriteLine("Console logging NOT configured");
             }
 
             // Normally you don't need to do this - debug output is enabled if a debugger is attached during LogJam initialization.
             // HOWEVER, in this case (using OwinHost.exe), the debugger isn't attached during initialization, so this is enabled explicitly.
-		    owinAppBuilder.GetLogManagerConfig().UseDebugger();
+            owinAppBuilder.GetLogManagerConfig().UseDebugger();
 
             // Use LogJam for OWIN tracing, and HTTP request logging
             // TODO: Support owinAppBuilder.GetTraceManager().TraceToAll(traceFormatter: new DefaultTraceFormatter() { IncludeTimestamp = true });
-		    owinAppBuilder.GetTraceManagerConfig().TraceTo(owinAppBuilder.GetLogManagerConfig().Writers, 
-                traceFormatter: new DefaultTraceFormatter() { IncludeTimestamp = true });
+            owinAppBuilder.GetTraceManagerConfig().TraceTo(owinAppBuilder.GetLogManagerConfig().Writers,
+                                                           traceFormatter: new DefaultTraceFormatter() { IncludeTimestamp = true });
             owinAppBuilder.UseOwinTracerLogging();
-		    owinAppBuilder.LogHttpRequestsToAll();
+            owinAppBuilder.LogHttpRequestsToAll();
 
-			// Trace OWIN exceptions
-			owinAppBuilder.TraceExceptions(logFirstChance: false, logUnhandled: true);
-		}
+            // Trace OWIN exceptions
+            owinAppBuilder.TraceExceptions(logFirstChance: false, logUnhandled: true);
+        }
 
-		/// <summary>
-		/// Returns <c>true</c> if logging to the console (aka stdout) should be enabled.
-		/// </summary>
-		/// <param name="owinAppBuilder"></param>
-		/// <returns></returns>
-		protected bool ShouldLogToConsole(IAppBuilder owinAppBuilder)
-		{
-			// This is a test we use to determine whether it's valid to write to the console - eg it's valid in OwinHost, but not in IIS
-			object value;
-			return owinAppBuilder.Properties.TryGetValue("host.TraceOutput", out value)
-			       && (value is TextWriter);
-		}
+        /// <summary>
+        /// Returns <c>true</c> if logging to the console (aka stdout) should be enabled.
+        /// </summary>
+        /// <param name="owinAppBuilder"></param>
+        /// <returns></returns>
+        protected bool ShouldLogToConsole(IAppBuilder owinAppBuilder)
+        {
+            // This is a test we use to determine whether it's valid to write to the console - eg it's valid in OwinHost, but not in IIS
+            // TODO: This shouldn't be necessary
+            object value;
+            return owinAppBuilder.Properties.TryGetValue("host.TraceOutput", out value)
+                   && (value is TextWriter);
+        }
 
-		private void ConfigureWebApiTracing(ITracerFactory tracerFactory, HttpConfiguration webApiConfig)
-		{
-			webApiConfig.Services.Replace(typeof(ITraceWriter), new LogJamWebApiTraceWriter(tracerFactory));
-			webApiConfig.Services.Add(typeof(IExceptionLogger), new LogJamExceptionLogger(tracerFactory));
-		}
+        private void ConfigureWebApiTracing(ITracerFactory tracerFactory, HttpConfiguration webApiConfig)
+        {
+            webApiConfig.Services.Replace(typeof(ITraceWriter), new LogJamWebApiTraceWriter(tracerFactory));
+            webApiConfig.Services.Add(typeof(IExceptionLogger), new LogJamExceptionLogger(tracerFactory));
+        }
 
-	}
+    }
 }

@@ -1,0 +1,35 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>LogJam Example - OWIN &amp; Web-API</title>
+  <meta charset="utf-8"/>
+</head>
+<body>
+<h1>LogJam Example - OWIN &amp; Web-API</h1>
+  <ul>
+    <li>
+      <a href="./webapi/logjam-trace?message=test+message&severity=warn&count=3">LogJam Tracing in Web API request</a>
+      <br /> (using <code>LogJam.Trace.Tracer</code>)
+    </li>
+    <li>
+      <a href="./webapi/webapi-trace?message=test+message&severity=info&count=3">Web API Tracing in Web API request</a>
+      <br /> (using <code>System.Web.Http.Tracing.ITraceWriter</code> forwarding to <code>LogJam.Trace.Tracer</code>)
+    </li>
+    <li>
+      <a href="./webapi/exception">Exception thrown from Web API action method</a>
+      <br /> (uses <code>LogJam.WebApi.LogJamExceptionLogger</code> to log Web API exceptions to <code>LogJam.Trace.Tracer</code>)
+    </li>
+    <li>
+      <a href="./webapi/delay?millisecondsDelay=600">Web API request that waits the specified amount of time before returning</a>
+    </li>
+    <li>
+      <a href="./owin/trace?message=test+message&eventType=warning&count=3">OWIN Tracing in OWIN request</a>
+      <br /> (using <code>Microsoft.Owin.Logging.ILogger</code> forwarding to <code>LogJam.Trace.Tracer</code>)
+    </li>
+    <li>
+      <a href="./owin/exception">Exception thrown from OWIN request</a>
+      <br /> (uses <code>Microsoft.Owin.Diagnostics.ErrorPageMiddleware</code> or <code>LogJam.Owin.ExceptionLoggingMiddleware</code> to log unhandled OWIN exceptions to <code>LogJam.Trace.Tracer</code>)
+    </li>
+  </ul>
+</body>
+</html>

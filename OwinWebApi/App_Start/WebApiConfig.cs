@@ -6,18 +6,22 @@
 // you may not use this file except in compliance with the License.
 // --------------------------------------------------------------------------------------------------------------------
 
+using System;
 using System.Web.Http;
+using LogJam.Trace;
 
 namespace LogJam.Examples.OwinWebApi
 {
-	public static class WebApiConfig
-	{
-		public static void Register(HttpConfiguration config)
-		{
-			// Web API configuration and services
+    public static class WebApiConfig
+    {
 
-			// Web API routes
-			config.MapHttpAttributeRoutes();
-		}
-	}
+        public static void Register(HttpConfiguration config)
+        {
+            // Web API configuration and services
+
+            // Web API routes
+            config.MapHttpAttributeRoutes();
+        }
+
+    }
 }
