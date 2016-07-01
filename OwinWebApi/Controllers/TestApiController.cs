@@ -43,7 +43,7 @@ namespace LogJam.Examples.OwinWebApi.Controllers
             WebApiTracing.ITraceWriter webApiTraceWriter = Configuration.Services.GetTraceWriter();
             for (int i = 0; i < count; ++i)
             {
-                webApiTraceWriter.Trace(Request, "TestApiController", webApiTraceLevel, record => record.Message = message);
+                webApiTraceWriter.Trace(Request, GetType().FullName, webApiTraceLevel, record => record.Message = message);
             }
 
             return string.Format("Traced '{0}' {1} times to Web-Api ITraceWriter with severity: {2}", message, count, webApiTraceLevel);
